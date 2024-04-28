@@ -10,9 +10,6 @@ class NeuralNetwork:
         
         self.dimensions = [inputDimension] + hiddenDimensions
         
-        print("=========")
-        print(self.dimensions)
-        
         if activationFunctions is None:
             activationFunctions = ["Softmax"] * (len(hiddenDimensions) + 1)
         elif len(activationFunctions) < hiddenDimensions:
@@ -40,25 +37,38 @@ class NeuralNetwork:
         hidden = A
         
         # Forward pass through the layers
+        index = 0
         for layer in self.layers:
+            
+            index += 1
+            # print("\n\n\n\n=============================HIDDEN LAYER {}=============================".format(index))
+            
             hidden = layer.forward(hidden)
             
         # AL is the output of the forward propagation
+        # print("\n\n\n\n===============================LAST LAYER================================")
         AL = self.finalLayer.forward(hidden)
         
         # Calculate the cost
+        
         cost = self.computeCost(AL, Y)
         
         if training:
             # If the process is training, the we apply the backpropagation:
             #   Calculate the gradient of the cost with respect to the scores
-            # deltaAL = self.computeCostGradient(AL, Y)
+            deltaAL = self.computeCostGradient(AL, Y)
             
             #   Backward pass to the final layer
-            (deltaAL, _, _) = self.finalLayer.backward(AL)
+            # print("\n\n\n\n===============================LAST LAYER================================")
+            (deltaAL, _, _) = self.finalLayer.backward(deltaAL)
             
             #   Backward pass to the remaining layers
+            index = 0
             for i in range(len(self.layers) - 1, -1, -1):
+
+                index += 1                
+                # print("\n\n\n\n=============================HIDDEN LAYER {}=============================".format(index))
+                
                 (deltaAL, _, _) = self.layers[i].backward(deltaAL)
             
         return AL, cost
@@ -70,9 +80,18 @@ class NeuralNetwork:
         m = Y.shape[1]
         
         # Calculate the cross-entropy cost
-        cost = (-1 / m) * (np.dot(Y, (np.log(AL)).transpose()) + np.dot((1 - Y), (np.log(1 - AL)).transpose()))
+        epsilon = 1e-15
+        AL = np.clip(AL, epsilon, 1 - epsilon)
+        binaryCrossEntropy = - (Y * np.log(AL) + (1 - Y) * np.log(1 - AL))
         
-        cost = np.squeeze(cost)
+        cost = np.mean(binaryCrossEntropy)
+        
+        # cost = (-1 / m) * (np.dot(Y, (np.log(AL)).transpose()) + np.dot((1 - Y), (np.log(1 - AL)).transpose()))
+        
+        # cost = np.squeeze(cost)
+        
+        # print("\n==============================COMPUTE COST===============================")
+        # print("Cost: {}".format(cost))
         
         return cost
     
@@ -89,7 +108,14 @@ class NeuralNetwork:
         #    =  (-1 / m) * (y - a) / [a * (1 - a)]
         
         # deltaAL is the gradient of the cost with respect to AL
-        deltaAL = (-1 / m) * (np.divide(Y, AL.transpose()) - np.divide(1 - Y, 1 - AL))
+        # deltaAL = (-1 / m) * (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
         # deltaAL = (-1 / m) * ((Y / AL) - ((1 - Y) / (1 - AL)))
+        epsilon = 1e-15
+        AL = np.clip(AL, epsilon, 1 - epsilon)
+        deltaAL = - ((Y / AL) + (1 - Y) / (1 - AL)) / m
+        
+        # print("\n=========================COMPUTE COST GRADIENT===========================")
+        # print("Cost gradient's shape: {}".format(deltaAL.shape))
+        # print(deltaAL)
         
         return deltaAL

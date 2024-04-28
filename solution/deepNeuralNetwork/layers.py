@@ -24,6 +24,15 @@ class Linear:
         # Cache is stored for computing the backward pass efficiently
         self.cache = (A, self.W, self.b)
         
+        # print("\n\n==================FORWARD PROPAGATION FOR LINEAR LAYER=================")
+        
+        # print("\n=========================CURRENT PARAMATERS============================")
+        # self.printParamaters()
+        
+        # print("\n====================================A====================================")
+        # print("A's shape: {}".format(A.shape))
+        # print(A)
+        
         # Z is the result matrix after the linear transformation process, with the shape of (<number of units in the current layer>, <number of units in the previous hidden layer>)
         # The brief formula is Z = A * W + b
         
@@ -35,11 +44,11 @@ class Linear:
         # Calculate properly:
         (previousLayerDimension, numberOfExamples) = A.shape
         
-        currentLayerDimentsion = self.W.shape[0]
+        currentLayerDimension = self.W.shape[0]
         
-        Z = np.zeros((currentLayerDimentsion, numberOfExamples))
+        Z = np.zeros((currentLayerDimension, numberOfExamples))
         
-        for i in range(currentLayerDimentsion):
+        for i in range(currentLayerDimension):
             for j in range(numberOfExamples):
                 dot = 0
                 for k in range(previousLayerDimension):
@@ -72,6 +81,10 @@ class Linear:
                 
         # print("=======================Z - PROPERLY CALCULATING=========================")                 
         # print(Z)
+        
+        # print("\n====================================Z====================================")
+        # print("Z's shape: {}".format(Z.shape))
+        # print(Z)
                 
         return Z
     
@@ -83,6 +96,12 @@ class Linear:
         
         # Get the previous input
         A = self.cache[0]
+        
+        # print("\n\n=================BACKWARD PROPAGATION FOR LINEAR LAYER=================")
+        
+        # print("\n=================================DELTA-Z=================================")
+        # print("Delta-Z's shape: {}".format(deltaZ.shape))
+        # print(deltaZ)
          
         # Get the number of examples 
         # m = A.shape[1]
@@ -106,6 +125,10 @@ class Linear:
         #       This is similar to what has happened when I caculating deltaW = dL / dA = (dL / dZ) * (dZ / dA) = deltaZ * [d(A * W + b) / dA] = deltaZ * W
         deltaA = np.dot(self.W.transpose(), deltaZ)
         
+        # print("\n=================================DELTA-A=================================")
+        # print("Delta-A's shape: {}".format(deltaA.shape))
+        # print(deltaA)
+        
         # It can be easily duduced that deltaZ, deltaW, deltab, and deltaA have the same shape as Z, W, b, and A respectively.
         # So we simply use the numpy.transpose() effectively before multiplicating the matrices to make sure that all of those required output have the precise shape. 
         # Take an example described in the forward process above: 
@@ -116,14 +139,30 @@ class Linear:
         
         # Update the weights and biases (Gradient descent)
         
+        # print("\n===========PARAMATERS BEFORE UPDATING BY GRADIENT DESCENT==============")
+        # self.printParamaters()
+        
         # self.W -= self.learingRate * deltaW
         for i in range(0, self.W.shape[0]):
             for j in range(0, self.W.shape[1]):
                 self.W[i][j] -= self.learingRate * deltaW[i][j]
         for i in range(0, len(self.b)):
             self.b[i] -= self.learingRate * deltab[i]
+            
+        # print("\n============PARAMATERS AFTER UPDATING BY GRADIENT DESCENT==============")
+        # self.printParamaters()
         
         return (deltaA, deltaW, deltab)
+    
+    def printParamaters(self):
+        
+        print("\n===============================WEIGHTS==================================") 
+        print("Weights' shape: {}".format(self.W.shape))
+        print(self.W)
+        
+        print("\n================================BIAS====================================") 
+        print("Biases' shape: {}".format(self.b.shape))
+        print(self.b)
     
 # ===============================================================================================================================
 # ReLU ACTIVATION FUNCTION CLASS
@@ -214,35 +253,91 @@ class Softmax:
         self.cache = None
         
     def forward(self, A):
+        
         # Cache is stored for computing the backward pass efficiently
         self.cache = A
         
+        # print("\n\n==========FORWARD PROPAGATION FOR SOFTMAX ACTIVATION FUNCTION==========")
+        
+        # print("\n===================================A===================================")
+        # print("A's shape: {}".format(A.shape))
+        # print(A)
+        
         # Compute the exponential values
-        expA = np.exp(A - np.max(A, axis=0, keepdims=True))
+        expA = np.exp(A)
         
         # Compute the sum of exponential values for each example
         expASum = np.sum(expA, axis=0, keepdims=True)
         
+        # print("\n=================================EXP-A=================================")
+        # print("Exp-A's shape: {}".format(expA.shape))
+        # print(expA)
+        
+        # print("\n=============================SUM OF EXP-A==============================")
+        # print("Sum of Exp-A's shape: {}".format(expASum.shape))
+        # print(expASum)
+        
         # Compute the softmax output
         Z = expA / expASum
+        
+        # print("\n===================================Z===================================")
+        # print("Z's shape: {}".format(Z.shape))
+        # print(Z)
         
         return Z
     
     def backward(self, deltaZ):
-        # Get the cached input
+
+        # Get the previous input
         A = self.cache
         
-        # Compute the softmax output again
-        expA = np.exp(A - np.max(A, axis=0, keepdims=True))
-        expASum = np.sum(expA, axis=0, keepdims=True)
-        softmax = expA / expASum
+        # print("\n==========BACKWARD PROPAGATION FOR SOFTMAX ACTIVATION FUNCTION=========")
         
-        # Compute the gradient of the softmax function
-        gradient = softmax * (1 - softmax)
+        # print("================================DELTA-Z================================")
+        # print("\nDelta-Z's shape: {}".format(deltaZ.shape))
+        # print(deltaZ)
+        
+        # print("\n===================================A===================================")
+        # print("A's shape: {}".format(A.shape))
+        # print(A)  
+
+        # Calculate the gradient of the output with the respect to this Sigmoid layer's input (dZ / dA):
+        # Given f is the exp function, g is the sum of exp values (Let i is the current index, then f = e^(a_i), g = e^(a_1) + e^(a_2) + ... e^(a_m) = e^(a_i) + C)
+        # We need to calculate (f / g)' = (f' * g - f * g') / (g^2)
+        #                               = [e^(a_i) * (e^(a_i) + C) - e^(a_i) * e^(a_i)] / [(e^(a_i) + C)^2]
+        #                               = (e^(a_i) * C) / [(e^(a_i) + C)^2]
+        
+        # Calculate e^(a_i)
+        expA = np.exp(A)
+        
+        # print("\n=================================EXP-A=================================")
+        # print("Exp-A's shape: {}".format(expA.shape))
+        # print(expA)
+        
+        # Calculate C = Exp Sum - e^(a_i)
+        otherSumsOfExpA = np.zeros(shape=expA.shape, dtype=expA.dtype)
+        
+        for i in range(expA.shape[0]):
+            for j in range(expA.shape[1]):
+                otherSumsOfExpA[i, j] = np.sum(expA[(i+1)%(expA.shape[0]), j]) + np.sum(expA[(i+2)%(expA.shape[0]), j])
+        
+        # print("\n==========================OTHER SUMS OF EXP-A==========================")
+        # print("Other Sums of Exp-A's shape: {}".format(otherSumsOfExpA.shape))
+        # print(otherSumsOfExpA)
+        
+        gradientZToA = (expA * otherSumsOfExpA) / ((expA + otherSumsOfExpA) ** 2)
+        
+        # print("\n=======================GRADIENT Z-TO-A VALUES==========================")
+        # print("Gradient z-to-a values' shape: {}".format(gradientZToA.shape))
+        # print(gradientZToA)      
         
         # Compute the gradient of the cost with respect to the input of the softmax layer
-        deltaA = deltaZ * gradient
+        deltaA = deltaZ * gradientZToA
         
+        # print("\n================================DELTA-A================================")
+        # print("Delta-A's shape: {}".format(deltaA.shape))
+        # print(deltaA)
+
         return deltaA
 
 # ===============================================================================================================================
@@ -252,6 +347,8 @@ class StandardLayer:
     def __init__(self, inputDimension, outputDimension, learningRate, activationFunction):
         
         self.linearLayer = Linear(inputDimension, outputDimension, learningRate)
+        
+        self.activationFunction = activationFunction
         
         self.activationFunctionLayer = None
         if activationFunction == "ReLU":
@@ -265,6 +362,8 @@ class StandardLayer:
             
     def forward(self, A):
         
+        # print("\n\n\nFORWARD PROPAGATION FOR LINEAR LAYER WITH {} ACTIVATION FUNCTION".format(self.activationFunction))
+        
         Z = self.linearLayer.forward(A)
         Z = self.activationFunctionLayer.forward(Z)
         
@@ -274,6 +373,8 @@ class StandardLayer:
         
         # deltaZ is the gradient of the cost with the respect to the post-activation output
         # deltaHidden is the gradient of the cost with the respect to the post-linear function output
+        
+        # print("\n\n\nBACKWARD PROPAGATION FOR LINEAR LAYER WITH {} ACTIVATION FUNCTION".format(self.activationFunction))
         
         deltaHidden = self.activationFunctionLayer.backward(deltaZ)
         (deltaA, deltaW, deltab) = self.linearLayer.backward(deltaZ)
