@@ -121,7 +121,7 @@ class Linear:
         #       Conclude: deltab = deltaZ
         deltab = np.sum(deltaZ, axis=1)
         
-        #   dA is the gradient of the cost with respect to the input of the current linear layer (which is also the output of the previous layer)
+        #   deltaA is the gradient of the cost with respect to the input of the current linear layer (which is also the output of the previous layer)
         #       This is similar to what has happened when I caculating deltaW = dL / dA = (dL / dZ) * (dZ / dA) = deltaZ * [d(A * W + b) / dA] = deltaZ * W
         deltaA = np.dot(self.W.transpose(), deltaZ)
         
@@ -138,21 +138,25 @@ class Linear:
         #   => deltaZ.shape = (2, 4), deltaW.shape = (2, 3), deltab.shape = (3, 1)
         
         # Update the weights and biases (Gradient descent)
-        
-        # print("\n===========PARAMATERS BEFORE UPDATING BY GRADIENT DESCENT==============")
-        # self.printParamaters()
-        
-        # self.W -= self.learingRate * deltaW
-        for i in range(0, self.W.shape[0]):
-            for j in range(0, self.W.shape[1]):
-                self.W[i][j] -= self.learingRate * deltaW[i][j]
-        for i in range(0, len(self.b)):
-            self.b[i] -= self.learingRate * deltab[i]
+        self.updateParamaters(deltaW=deltaW, deltab=deltab)
             
         # print("\n============PARAMATERS AFTER UPDATING BY GRADIENT DESCENT==============")
         # self.printParamaters()
         
         return (deltaA, deltaW, deltab)
+    
+    def updateParamaters(self, deltaW, deltab):
+        # print("\n===========PARAMATERS BEFORE UPDATING BY GRADIENT DESCENT==============")
+        # self.printParamaters()
+        
+        # self.W -= self.learingRate * deltaW
+        # self.b -= self.learingRate * deltab
+        
+        for i in range(0, self.W.shape[0]):
+            for j in range(0, self.W.shape[1]):
+                self.W[i][j] -= self.learingRate * deltaW[i][j]
+        for i in range(0, len(self.b)):
+            self.b[i] -= self.learingRate * deltab[i]
     
     def printParamaters(self):
         
