@@ -254,6 +254,7 @@ class Sigmoid:
 class Softmax:
     
     def __init__(self):
+        
         self.cache = None
         
     def forward(self, A):

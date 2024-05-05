@@ -3,9 +3,9 @@ import numpy as np
 from dataProcessor import Data
 from deepNeuralNetwork.neuralNetwork import NeuralNetwork
 
-data = Data(datafileName="IRIS.csv")
+data = Data(datafileName="./IRIS.csv")
 
-data.printOutput()
+# data.printOutput()
 
 # Create an instance of the Neural Network
 #   Number of input features
