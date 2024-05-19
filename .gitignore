@@ -72,5 +72,6 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 ifc_env
+ifc_env_2
 solution/_pycache_
 solution/deepNeuralNetwork/_pycache_
